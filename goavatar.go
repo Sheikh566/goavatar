@@ -13,9 +13,9 @@ import (
 type options struct {
 	size     int
 	gridSize int
-	bgColor  color.RGBA
-	fgColors []color.RGBA
-	layers   int
+	bgColor  color.NRGBA
+	fgColors []color.NRGBA
+	layers   int 
 }
 
 // OptFunc is a function that applies an option to the options struct.
@@ -44,7 +44,7 @@ func WithGridSize(g int) OptFunc {
 // WithBgColor sets the background color of the avatar.
 func WithBgColor(r, g, b, a uint8) OptFunc {
 	return func(o *options) {
-		o.bgColor = color.RGBA{r, g, b, a}
+		o.bgColor = color.NRGBA{r, g, b, a}
 	}
 }
 
@@ -52,7 +52,7 @@ func WithBgColor(r, g, b, a uint8) OptFunc {
 // It sets the first layer's color.
 func WithFgColor(r, g, b, a uint8) OptFunc {
 	return func(o *options) {
-		o.fgColors = []color.RGBA{{r, g, b, a}}
+		o.fgColors = []color.NRGBA{{r, g, b, a}}
 	}
 }
 
@@ -70,9 +70,9 @@ func WithLayerColor(layerIndex int, r, g, b, a uint8) OptFunc {
 	return func(o *options) {
 		// Expand slice if needed
 		for len(o.fgColors) <= layerIndex {
-			o.fgColors = append(o.fgColors, color.RGBA{})
+			o.fgColors = append(o.fgColors, color.NRGBA{})
 		}
-		o.fgColors[layerIndex] = color.RGBA{r, g, b, a}
+		o.fgColors[layerIndex] = color.NRGBA{r, g, b, a}
 	}
 }
 
@@ -81,8 +81,8 @@ func defaultOptions(hash string) options {
 	return options{
 		size:     64,                            // default size should be 64 to make sure images are perfect square
 		gridSize: 8,                             // minimum size for the grid for make shape complexity
-		bgColor:  color.RGBA{240, 240, 240, 255}, // light gray color
-		fgColors: []color.RGBA{{hash[0], hash[1], hash[2], 255}}, // use the first three hash bytes as the foreground color
+		bgColor:  color.NRGBA{240, 240, 240, 255}, // light gray color
+		fgColors: []color.NRGBA{{hash[0], hash[1], hash[2], 255}}, // use the first three hash bytes as the foreground color
 		layers:   1,
 	}
 }
@@ -110,11 +110,8 @@ func drawPixel(img *image.RGBA, gridX, gridY int, c color.Color, gridSize, image
 	}
 
 	// Fill the block
-	for y := startY; y < endY; y++ {
-		for x := startX; x < endX; x++ {
-			img.Set(x, y, c)
-		}
-	}
+	rect := image.Rect(startX, startY, endX, endY)
+	draw.Draw(img, rect, &image.Uniform{c}, image.Point{}, draw.Over)
 }
 
 // Make generates an avatar image based on the input string and options.
@@ -143,7 +140,7 @@ func Make(input string, opts ...OptFunc) image.Image {
 		}
 
 		// determine color
-		var avatarColor color.RGBA
+		var avatarColor color.NRGBA
 		if l < len(o.fgColors) {
 			avatarColor = o.fgColors[l]
 			// Check if color is empty/zero? defaultOptions sets index 0.
@@ -155,11 +152,11 @@ func Make(input string, opts ...OptFunc) image.Image {
 			// If it is strictly 0,0,0,0, maybe fallback to hash? 
 			// Let's assume user provides valid colors if they use WithLayerColor.
 			// But for "unspecified" layers where user requested 3 layers but provided 1 color:
-			if avatarColor == (color.RGBA{}) {
-				avatarColor = color.RGBA{currentHash[0], currentHash[1], currentHash[2], 255}
+			if avatarColor == (color.NRGBA{}) {
+				avatarColor = color.NRGBA{currentHash[0], currentHash[1], currentHash[2], 255}
 			}
 		} else {
-			avatarColor = color.RGBA{currentHash[0], currentHash[1], currentHash[2], 255}
+			avatarColor = color.NRGBA{currentHash[0], currentHash[1], currentHash[2], 255}
 		}
 
 		// generate the pixel pattern

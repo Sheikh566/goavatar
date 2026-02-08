@@ -41,14 +41,14 @@ func expectedTopLeftPixel(input string, opts []OptFunc) (col color.Color) {
 		
 		if pixelOn {
 			// determine color for this layer
-			var layerColor color.RGBA
+			var layerColor color.NRGBA
 			if l < len(conf.fgColors) {
 				layerColor = conf.fgColors[l]
-				if layerColor == (color.RGBA{}) {
-					layerColor = color.RGBA{currentHash[0], currentHash[1], currentHash[2], 255}
+				if layerColor == (color.NRGBA{}) {
+					layerColor = color.NRGBA{currentHash[0], currentHash[1], currentHash[2], 255}
 				}
 			} else {
-				layerColor = color.RGBA{currentHash[0], currentHash[1], currentHash[2], 255}
+				layerColor = color.NRGBA{currentHash[0], currentHash[1], currentHash[2], 255}
 			}
 			finalColor = layerColor
 		}
